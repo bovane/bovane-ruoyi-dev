@@ -1,8 +1,8 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="字典名称" prop="dictType">
-        <el-select v-model="queryParams.dictType" size="small">
+        <el-select v-model="queryParams.dictType">
           <el-option
             v-for="item in typeOptions"
             :key="item.dictId"
@@ -16,12 +16,11 @@
           v-model="queryParams.dictLabel"
           placeholder="请输入字典标签"
           clearable
-          size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
       <el-form-item label="状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="数据状态" clearable size="small">
+        <el-select v-model="queryParams.status" placeholder="数据状态" clearable>
           <el-option
             v-for="dict in dict.type.sys_normal_disable"
             :key="dict.value"
@@ -75,10 +74,18 @@
           plain
           icon="el-icon-download"
           size="mini"
-          :loading="exportLoading"
           @click="handleExport"
           v-hasPermi="['system:dict:export']"
         >导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-close"
+          size="mini"
+          @click="handleClose"
+        >关闭</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -156,7 +163,7 @@
             <el-option
               v-for="item in listClassOptions"
               :key="item.value"
-              :label="item.label"
+              :label="item.label + '(' + item.value + ')'"
               :value="item.value"
             ></el-option>
           </el-select>
@@ -183,8 +190,8 @@
 </template>
 
 <script>
-import { listData, getData, delData, addData, updateData, exportData } from "@/api/system/dict/data";
-import { listType, getType } from "@/api/system/dict/type";
+import { listData, getData, delData, addData, updateData } from "@/api/system/dict/data";
+import { optionselect as getDictOptionselect, getType } from "@/api/system/dict/type";
 
 export default {
   name: "Data",
@@ -193,8 +200,6 @@ export default {
     return {
       // 遮罩层
       loading: true,
-      // 导出遮罩层
-      exportLoading: false,
       // 选中数组
       ids: [],
       // 非单个禁用
@@ -282,8 +287,8 @@ export default {
     },
     /** 查询字典类型列表 */
     getTypeList() {
-      listType().then(response => {
-        this.typeOptions = response.rows;
+      getDictOptionselect().then(response => {
+        this.typeOptions = response.data;
       });
     },
     /** 查询字典数据列表 */
@@ -318,6 +323,11 @@ export default {
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
+    },
+    /** 返回按钮操作 */
+    handleClose() {
+      const obj = { path: "/system/dict" };
+      this.$tab.closeOpenPage(obj);
     },
     /** 重置按钮操作 */
     resetQuery() {
@@ -354,12 +364,14 @@ export default {
         if (valid) {
           if (this.form.dictCode != undefined) {
             updateData(this.form).then(response => {
+              this.$store.dispatch('dict/removeDict', this.queryParams.dictType);
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
             });
           } else {
             addData(this.form).then(response => {
+              this.$store.dispatch('dict/removeDict', this.queryParams.dictType);
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
@@ -376,18 +388,14 @@ export default {
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
+        this.$store.dispatch('dict/removeDict', this.queryParams.dictType);
       }).catch(() => {});
     },
     /** 导出按钮操作 */
     handleExport() {
-      const queryParams = this.queryParams;
-      this.$modal.confirm('是否确认导出所有数据项？').then(() => {
-        this.exportLoading = true;
-        return exportData(queryParams);
-      }).then(response => {
-        this.$download.name(response.msg);
-        this.exportLoading = false;
-      }).catch(() => {});
+      this.download('system/dict/data/export', {
+        ...this.queryParams
+      }, `data_${new Date().getTime()}.xlsx`)
     }
   }
 };

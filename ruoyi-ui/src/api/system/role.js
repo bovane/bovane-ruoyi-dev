@@ -65,15 +65,6 @@ export function delRole(roleId) {
   })
 }
 
-// 导出角色
-export function exportRole(query) {
-  return request({
-    url: '/system/role/export',
-    method: 'get',
-    params: query
-  })
-}
-
 // 查询角色已授权用户列表
 export function allocatedUserList(query) {
   return request({
@@ -116,5 +107,13 @@ export function authUserSelectAll(data) {
     url: '/system/role/authUser/selectAll',
     method: 'put',
     params: data
+  })
+}
+
+// 根据角色ID查询部门树结构
+export function deptTreeSelect(roleId) {
+  return request({
+    url: '/system/role/deptTree/' + roleId,
+    method: 'get'
   })
 }

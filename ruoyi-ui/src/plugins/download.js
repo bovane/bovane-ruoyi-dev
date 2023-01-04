@@ -1,42 +1,44 @@
-import { saveAs } from 'file-saver'
 import axios from 'axios'
-import { getToken } from '@/utils/auth'
 import { Message } from 'element-ui'
+import { saveAs } from 'file-saver'
+import { getToken } from '@/utils/auth'
+import errorCode from '@/utils/errorCode'
+import { blobValidate } from "@/utils/ruoyi";
 
 const baseURL = process.env.VUE_APP_BASE_API
 
 export default {
   name(name, isDelete = true) {
-    var url = baseURL + "/common/download?fileName=" + encodeURI(name) + "&delete=" + isDelete
+    var url = baseURL + "/common/download?fileName=" + encodeURIComponent(name) + "&delete=" + isDelete
     axios({
       method: 'get',
       url: url,
       responseType: 'blob',
       headers: { 'Authorization': 'Bearer ' + getToken() }
     }).then(async (res) => {
-      const isLogin = await this.blobValidate(res.data);
+      const isLogin = await blobValidate(res.data);
       if (isLogin) {
         const blob = new Blob([res.data])
-        this.saveAs(blob, decodeURI(res.headers['download-filename']))
+        this.saveAs(blob, decodeURIComponent(res.headers['download-filename']))
       } else {
-        Message.error('无效的会话，或者会话已过期，请重新登录。');
+        this.printErrMsg(res.data);
       }
     })
   },
   resource(resource) {
-    var url = baseURL + "/common/download/resource?resource=" + encodeURI(resource);
+    var url = baseURL + "/common/download/resource?resource=" + encodeURIComponent(resource);
     axios({
       method: 'get',
       url: url,
       responseType: 'blob',
       headers: { 'Authorization': 'Bearer ' + getToken() }
     }).then(async (res) => {
-      const isLogin = await this.blobValidate(res.data);
+      const isLogin = await blobValidate(res.data);
       if (isLogin) {
         const blob = new Blob([res.data])
-        this.saveAs(blob, decodeURI(res.headers['download-filename']))
+        this.saveAs(blob, decodeURIComponent(res.headers['download-filename']))
       } else {
-        Message.error('无效的会话，或者会话已过期，请重新登录。');
+        this.printErrMsg(res.data);
       }
     })
   },
@@ -48,26 +50,23 @@ export default {
       responseType: 'blob',
       headers: { 'Authorization': 'Bearer ' + getToken() }
     }).then(async (res) => {
-      const isLogin = await this.blobValidate(res.data);
+      const isLogin = await blobValidate(res.data);
       if (isLogin) {
         const blob = new Blob([res.data], { type: 'application/zip' })
         this.saveAs(blob, name)
       } else {
-        Message.error('无效的会话，或者会话已过期，请重新登录。');
+        this.printErrMsg(res.data);
       }
     })
   },
   saveAs(text, name, opts) {
     saveAs(text, name, opts);
   },
-  async blobValidate(data) {
-    try {
-      const text = await data.text();
-      JSON.parse(text);
-      return false;
-    } catch (error) {
-      return true;
-    }
-  },
+  async printErrMsg(data) {
+    const resText = await data.text();
+    const rspObj = JSON.parse(resText);
+    const errMsg = errorCode[rspObj.code] || rspObj.msg || errorCode['default']
+    Message.error(errMsg);
+  }
 }
 
