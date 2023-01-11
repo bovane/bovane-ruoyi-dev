@@ -48,8 +48,8 @@ public class RuoYiApplication implements ApplicationRunner {
             log.info("|  |   |  |\\   --.\\ `-' ||  |\\ `--.\\ '-'  ||  |       '  '--'\\|  '--'  /|  |\\  \\");
             log.info("`--'   `--' `----' `---' `--' `---' `--`--'`--'        `-----'`-------' `--' '--'");
             log.info("Medical-CDR 根地地址：{}", urlBase + contextPath);
-            log.info("Medical-CDR 文档地址：{}", urlBase + contextPath + "/doc.html");
-            log.info("WebService  访问地址：{}", urlBase + contextPath + "/webservice");
+            log.info("Medical-CDR 文档地址：{}", urlBase + contextPath + "doc.html");
+            log.info("WebService  访问地址：{}", urlBase + contextPath + "webservice");
         }
     }
 }
