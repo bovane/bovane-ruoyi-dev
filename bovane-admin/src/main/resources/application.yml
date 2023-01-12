@@ -18,7 +18,7 @@ ruoyi:
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080
-  port: 8080
+  port: 8081
   servlet:
     # 应用的访问路径
     context-path: /
@@ -135,7 +135,7 @@ swagger:
   # 是否开启swagger
   enabled: true
   # 请求前缀
-  pathMapping: /dev-api
+  pathMapping: /
 
 # 防止XSS攻击
 xss: 
@@ -149,6 +149,8 @@ xss:
 
 # security配置
 security:
+#  permitAll:
+#    /,/login,/loginWithCode,/captchaImage,/logout,/*/doc.html
   # 排除路径
   excludes:
     # 静态资源
@@ -163,3 +165,4 @@ security:
     # actuator 监控配置
     - /actuator
     - /actuator/**
+
